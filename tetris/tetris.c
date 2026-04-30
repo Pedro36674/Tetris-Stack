@@ -1,139 +1,206 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+
+#define FILA_CAPACIDADE 5
+#define PILHA_CAPACIDADE 3
 
 typedef struct {
-    char letra[2]; // 1 caractere + terminador nulo
-    int id;
+    char tipo; // Tipo da peça: I, O, T, L
+    int id;    // Identificador único da peça
 } Peca;
 
-#define max 6
-
 typedef struct {
-    Peca itens[max];
+    Peca itens[FILA_CAPACIDADE];
     int inicio;
     int fim;
     int total;
 } Fila;
 
-void inicializarFila(Fila *f) {
-    f->inicio = 0;
-    f->fim = 0;
-    f->total = 0;
+typedef struct {
+    Peca itens[PILHA_CAPACIDADE];
+    int topo;
+} Pilha;
+
+void inicializarFila(Fila *fila) {
+    fila->inicio = 0;
+    fila->fim = 0;
+    fila->total = 0;
 }
 
-int estaCheia(Fila *f) {
-    return f->total == max;
+int filaCheia(const Fila *fila) {
+    return fila->total == FILA_CAPACIDADE;
 }
 
-int estaVazia(Fila *f) {
-    return f->total == 0;
+int filaVazia(const Fila *fila) {
+    return fila->total == 0;
 }
 
-void inserir(Fila *f, Peca p) {
-    if (estaCheia(f)) {
-        printf("Fila cheia! Não é possível inserir.\n");
+void enfileirar(Fila *fila, Peca peca) {
+    if (filaCheia(fila)) {
+        printf("Erro: fila cheia. Não é possível adicionar nova peça.\n");
         return;
     }
-    f->itens[f->fim] = p;
-    f->fim = (f->fim + 1) % max;
-    f->total++;
+    fila->itens[fila->fim] = peca;
+    fila->fim = (fila->fim + 1) % FILA_CAPACIDADE;
+    fila->total++;
 }
 
-void remover(Fila *f, Peca *p) {
-    if (estaVazia(f)) {
-        printf("Fila vazia! Não é possível remover.\n");
-        return;
+int desenfileirar(Fila *fila, Peca *peca) {
+    if (filaVazia(fila)) {
+        return 0;
     }
-    if (p != NULL) {
-        *p = f->itens[f->inicio];
+    if (peca != NULL) {
+        *peca = fila->itens[fila->inicio];
     }
-    f->inicio = (f->inicio + 1) % max;
-    f->total--;
+    fila->inicio = (fila->inicio + 1) % FILA_CAPACIDADE;
+    fila->total--;
+    return 1;
 }
 
-void mostrarFila(Fila *f) {
-    if (estaVazia(f)) {
-        printf("Fila vazia!\n");
+void inicializarPilha(Pilha *pilha) {
+    pilha->topo = -1;
+}
+
+int pilhaCheia(const Pilha *pilha) {
+    return pilha->topo == PILHA_CAPACIDADE - 1;
+}
+
+int pilhaVazia(const Pilha *pilha) {
+    return pilha->topo == -1;
+}
+
+int empilhar(Pilha *pilha, Peca peca) {
+    if (pilhaCheia(pilha)) {
+        return 0;
+    }
+    pilha->itens[++pilha->topo] = peca;
+    return 1;
+}
+
+int desempilhar(Pilha *pilha, Peca *peca) {
+    if (pilhaVazia(pilha)) {
+        return 0;
+    }
+    if (peca != NULL) {
+        *peca = pilha->itens[pilha->topo];
+    }
+    pilha->topo--;
+    return 1;
+}
+
+char gerarTipoAleatorio(void) {
+    const char tipos[4] = {'I', 'O', 'T', 'L'};
+    return tipos[rand() % 4];
+}
+
+Peca gerarPeca(int *contadorId) {
+    Peca peca;
+    peca.tipo = gerarTipoAleatorio();
+    peca.id = (*contadorId)++;
+    return peca;
+}
+
+void mostrarFila(const Fila *fila) {
+    if (filaVazia(fila)) {
+        printf("Fila de peças: [vazia]\n");
         return;
     }
-    printf("Fila: ");
-    for (int i = 0; i < f->total; i++) {
-        int idx = (f->inicio + i) % max;
-        printf("%s (%d) ", f->itens[idx].letra, f->itens[idx].id);
+
+    printf("Fila de peças:");
+    for (int i = 0; i < fila->total; i++) {
+        int indice = (fila->inicio + i) % FILA_CAPACIDADE;
+        printf(" [%c %d]", fila->itens[indice].tipo, fila->itens[indice].id);
     }
     printf("\n");
 }
 
-int main() {
-    Fila f;
-    inicializarFila(&f);
+void mostrarPilha(const Pilha *pilha) {
+    if (pilhaVazia(pilha)) {
+        printf("Pilha de reserva: (Topo -> Base) [vazia]\n");
+        return;
+    }
 
-    Peca p1 = {"I", 1};
-    Peca p2 = {"O", 2};
-    Peca p3 = {"T", 3};
-    inserir(&f, p1);
-    inserir(&f, p2);
-    inserir(&f, p3);
+    printf("Pilha de reserva: (Topo -> Base):");
+    for (int i = pilha->topo; i >= 0; i--) {
+        printf(" [%c %d]", pilha->itens[i].tipo, pilha->itens[i].id);
+    }
+    printf("\n");
+}
 
-    mostrarFila(&f);
+void mostrarEstado(const Fila *fila, const Pilha *pilha) {
+    printf("\n=== Estado atual ===\n");
+    mostrarFila(fila);
+    mostrarPilha(pilha);
+    printf("====================\n");
+}
 
-    Peca removida;
-    remover(&f, &removida);
-    printf("Peça removida: %s, %d\n", removida.letra, removida.id);
-    mostrarFila(&f);
+void exibirMenu(void) {
+    printf("\nOpções de ação:\n");
+    printf("1 - Jogar peça\n");
+    printf("2 - Reservar peça\n");
+    printf("3 - Usar peça reservada\n");
+    printf("0 - Sair\n");
+    printf("Escolha uma opção: ");
+}
 
-    printf("\n-------Menu-----\n");
-    printf("1. Inserir peça\n");
-    printf("2. Mostrar fila\n");
-    printf("3. Sair\n");
-    
-    int opcao;
-    int idPeca = 4;
-    
-    while (1) {
-        printf("Escolha uma opção: ");
-        scanf("%d", &opcao);
-        getchar(); // Limpa o '\n' do buffer
-        
-        switch (opcao) {
-            case 1: {
-                printf("Letra da peça: ");
-                char letra[2];
-                scanf("%1s", letra);
-                getchar(); // Limpa o '\n' do buffer
-                
-                Peca novaPeca = {0};
-                novaPeca.letra[0] = letra[0];
-                novaPeca.id = idPeca++;
-                
-                inserir(&f, novaPeca);
-                printf("Peça '%s' inserida com sucesso!\n", novaPeca.letra);
-                
-                // Remove a primeira peça da fila
-                Peca removida;
-                remover(&f, &removida);
-                printf("Peça '%s' removida da fila.\n\n", removida.letra);
-                break;
-            }
-            
-            case 2:
-                mostrarFila(&f);
-                printf("\n");
-                break;
-                
-            case 3:
-                printf("Saindo do programa...\n");
-                return 0;
-                
-            default:
-                printf("Opção inválida! Tente novamente.\n\n");
-                break;
+int main(void) {
+    srand((unsigned int)time(NULL));
+
+    Fila fila;
+    Pilha reserva;
+    inicializarFila(&fila);
+    inicializarPilha(&reserva);
+
+    int proximoId = 0;
+    for (int i = 0; i < FILA_CAPACIDADE; i++) {
+        enfileirar(&fila, gerarPeca(&proximoId));
+    }
+
+    int comando = -1;
+    while (comando != 0) {
+        mostrarEstado(&fila, &reserva);
+        exibirMenu();
+
+        if (scanf("%d", &comando) != 1) {
+            printf("Entrada inválida. Digite um número.\n");
+            scanf("%*s");
+            continue;
         }
-        
-        printf("-------Menu-----\n");
-        printf("1. Inserir peça\n");
-        printf("2. Mostrar fila\n");
-        printf("3. Sair\n");
+
+        if (comando == 1) {
+            Peca pecaJogada;
+            if (!desenfileirar(&fila, &pecaJogada)) {
+                printf("Não há peças para jogar.\n");
+            } else {
+                printf("Peça jogada: [%c %d]\n", pecaJogada.tipo, pecaJogada.id);
+                enfileirar(&fila, gerarPeca(&proximoId));
+            }
+        } else if (comando == 2) {
+            if (pilhaCheia(&reserva)) {
+                printf("Reserva cheia! Não é possível reservar outra peça.\n");
+            } else {
+                Peca pecaReservada;
+                if (!desenfileirar(&fila, &pecaReservada)) {
+                    printf("Não há peças na fila para reservar.\n");
+                } else {
+                    empilhar(&reserva, pecaReservada);
+                    printf("Peça reservada: [%c %d]\n", pecaReservada.tipo, pecaReservada.id);
+                    enfileirar(&fila, gerarPeca(&proximoId));
+                }
+            }
+        } else if (comando == 3) {
+            Peca pecaUsada;
+            if (!desempilhar(&reserva, &pecaUsada)) {
+                printf("Reserva vazia! Não há peça para usar.\n");
+            } else {
+                printf("Peça usada da reserva: [%c %d]\n", pecaUsada.tipo, pecaUsada.id);
+            }
+        } else if (comando == 0) {
+            printf("Encerrando o jogo. Obrigado por jogar!\n");
+        } else {
+            printf("Opção inválida. Tente novamente.\n");
+        }
     }
 
     return 0;

@@ -1,192 +1,90 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <time.h>
 
-#define TAMANHO 10
+#define MAX 5
 
-void gerarListaOrdenada(int lista[], int n);
-void gerarListaInversa(int lista[], int n);
-void gerarListaAleatoria(int lista[], int n);
+typedef struct {
+    char nome[30];
+    int idade;
+} Pessoa;
 
-void bubbleSort(int lista[], int n);
-void selectionSort(int lista[], int n);
-void insertionSort(int lista[], int n);
+typedef struct {
+    Pessoa itens[MAX];
+    int topo;
+} Pilha;
 
-void imprimirLista(const char *titulo, int lista[], int n);
-void copiarLista(int destino[], const int origem[], int n);
+void inicializarPilha(Pilha *p) {
+    p->topo = -1;
+}
+
+int estaCheia(Pilha *p) {
+    return p->topo == MAX - 1;
+}
+
+int estaVazia(Pilha *p) {
+    return p->topo == -1;
+}
+
+void push(Pilha *p, Pessoa nova) {
+    if (estaCheia(p)) {
+        printf("Pilha cheia! Não é possível adicionar mais pessoas.\n");
+        return;
+    }
+    p->topo++;
+    p->itens[p->topo] = nova;
+}
+
+void pop(Pilha *p, Pessoa *removida) {
+    if (estaVazia(p)) {
+        printf("Pilha vazia! Não é possível remover pessoas.\n");
+        return;
+    }
+    *removida = p->itens[p->topo];
+    p->topo--;
+}
+
+void peek(Pilha *p, Pessoa *vizualizada) {
+    if (estaVazia(p)) {
+        printf("Pilha vazia! Não há pessoas para mostrar.\n");
+        return;
+    }
+    *vizualizada = p->itens[p->topo];
+}
+
+void mostrarPilha(Pilha *p) {
+    if (estaVazia(p)) {
+        printf("Pilha vazia!\n");
+        return;
+    }
+    printf("Pilha: ");
+    for (int i = p->topo; i >= 0; i--) {
+        printf("%s (%d) ", p->itens[i].nome, p->itens[i].idade);
+    }
+    printf("\n");
+}
 
 int main(){
-    srand(time(NULL));
+    Pilha p;
 
-    int listaOrdenada[TAMANHO];
-    int listaInversa[TAMANHO];
-    int listaAleatoria[TAMANHO];
+    inicializarPilha(&p);
+    
+    Pessoa a = {"Alice", 30};
+    Pessoa b = {"Bob", 25};
+    Pessoa c = {"Charlie", 35};
+    push(&p, a);
+    push(&p, b);
+    push(&p, c);
 
-    printf("---- Gerando listas de entrada ----\n");
-    gerarListaOrdenada(listaOrdenada, TAMANHO);
-    gerarListaInversa(listaInversa, TAMANHO);
-    gerarListaAleatoria(listaAleatoria, TAMANHO);
-    printf("--------------------------------------\n");
+    mostrarPilha(&p);
 
-    int listaTemp[TAMANHO];
+    Pessoa removida;
+    pop(&p, &removida);
+    printf("Pessoa removida: %s, %d\n", removida.nome, removida.idade);
+    mostrarPilha(&p);
 
-    printf("---- Testando Bubble Sort ----\n");
-    // Teste com lista ordenada (melhor caso)
-    copiarLista(listaTemp, listaOrdenada, TAMANHO);
-    bubbleSort(listaTemp, TAMANHO);
-    imprimirLista("Bubble Sort - Lista Ordenada", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista inversa (pior caso)
-    copiarLista(listaTemp, listaInversa, TAMANHO);
-    bubbleSort(listaTemp, TAMANHO);
-    imprimirLista("Bubble Sort - Lista Inversa", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista aleatória (caso médio)
-    copiarLista(listaTemp, listaAleatoria, TAMANHO);
-    bubbleSort(listaTemp, TAMANHO);
-    imprimirLista("Bubble Sort - Lista Aleatória", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
+    Pessoa topo;
+    peek(&p, &topo);
+    printf("Pessoa no topo: %s, %d\n", topo.nome, topo.idade);
 
-
-    printf("---- Testando Selection Sort ----\n");
-    // Teste com lista ordenada (melhor caso)
-    copiarLista(listaTemp, listaOrdenada, TAMANHO);
-    selectionSort(listaTemp, TAMANHO);
-    imprimirLista("Selection Sort - Lista Ordenada", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista inversa (pior caso)
-    copiarLista(listaTemp, listaInversa, TAMANHO);
-    selectionSort(listaTemp, TAMANHO);
-    imprimirLista("Selection Sort - Lista Inversa", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista aleatória (caso médio)
-    copiarLista(listaTemp, listaAleatoria, TAMANHO);
-    selectionSort(listaTemp, TAMANHO);
-    imprimirLista("Selection Sort - Lista Aleatória", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-
-
-    printf("---- Testando Insertion Sort ----\n");
-    // Teste com lista ordenada (melhor caso)
-    copiarLista(listaTemp, listaOrdenada, TAMANHO);
-    insertionSort(listaTemp, TAMANHO);
-    imprimirLista("Insertion Sort - Lista Ordenada", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista inversa (pior caso)
-    copiarLista(listaTemp, listaInversa, TAMANHO);
-    insertionSort(listaTemp, TAMANHO);
-    imprimirLista("Insertion Sort - Lista Inversa", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-    // Teste com lista aleatória (caso médio)
-    copiarLista(listaTemp, listaAleatoria, TAMANHO);
-    insertionSort(listaTemp, TAMANHO);
-    imprimirLista("Insertion Sort - Lista Aleatória", listaTemp, TAMANHO);
-    printf("\n");
-    printf("----------------------------------\n");
-
-    return 0; // Fim do programa
-}
-
-void bubbleSort(int lista[], int n) {
-    int i, j, temp;
-    int trocou;
-
-    for (i = 0; i < n - 1; i++) {
-        trocou = 0;
-        
-        for (j = 0; j < n - i - 1; j++) {
-        // Se o elemento atual for maior que o próximo...
-            if (lista[j] > lista[j + 1]) {
-                // Troca os elementos
-                temp = lista[j];
-                lista[j] = lista[j + 1];
-                lista[j + 1] = temp;
-                trocou = 1; // Indica que houve troca nesta passagem
-            }
-        }
-        if (!trocou) {
-            break; // A lista já está ordenada
-        }
-    }
-}
-
-void insertionSort(int lista[], int n) {
-    int i, key, j;
-
-    for (i = 1; i < n; i++) {
-        key = lista[i];
-        j = i - 1;
-
-        // Move os elementos de lista[0..i-1], que são maiores que key,
-        // para uma posição à frente de sua posição atual
-        while (j >= 0 && lista[j] > key) {
-            lista[j + 1] = lista[j];
-            j = j - 1;
-        }
-        lista[j + 1] = key;
-    }
-}
-
-void selectionSort(int lista[], int n) {
-    int i, j, min_idx, temp;
-
-    for (i = 0; i < n - 1; i++) {
-        min_idx = i; // Encontra o menor elemento no array não ordenado
-
-        for (j = i + 1; j < n; j++) {
-            if (lista[j] < lista[min_idx]) {
-                min_idx = j; // Atualiza o índice do menor elemento
-            }
-        }
-        // Troca o menor elemento encontrado com o primeiro elemento
-        if (min_idx != i) {
-            temp = lista[i];
-            lista[i] = lista[min_idx];
-            lista[min_idx] = temp;
-        }
-    }
-}
-
-void gerarListaOrdenada(int lista[], int n) {
-    for (int i = 0; i < n; i++) {
-        lista[i] = i + 1; // Lista ordenada de 1 a n
-    }
-    imprimirLista("Original - Lista Ordenada", lista, n);
-}
-
-void gerarListaInversa(int lista[], int n) {
-    for (int i = 0; i < n; i++) {
-        lista[i] = n - i; // Lista inversa de n a 1
-    }
-    imprimirLista("Original - Lista Inversa", lista, n);
-}
-
-void gerarListaAleatoria(int lista[], int n) {
-    for (int i = 0; i < n; i++) {
-        lista[i] = rand() % 100 + 1; // Números aleatórios entre 1 e 100
-    }
-    imprimirLista("Original - Lista Aleatória", lista, n);
-}
-
-void imprimirLista(const char *titulo, int lista[], int n) {
-    printf("%s:\n", titulo);
-    for (int i = 0; i < n; i++) {
-        printf("%d ", lista[i]);
-    }
-    printf("\n");
-}
-
-void copiarLista(int destino[], const int origem[], int n) {
-    for (int i = 0; i < n; i++) {
-        destino[i] = origem[i];
-    }
+    return 0;
 }
