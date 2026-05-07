@@ -89,6 +89,37 @@ int desempilhar(Pilha *pilha, Peca *peca) {
     return 1;
 }
 
+// Troca a peça da frente da fila com a peça do topo da pilha.
+// Retorna 1 em caso de sucesso ou 0 se uma das estruturas estiver vazia.
+int trocarFrenteFilaPilha(Fila *fila, Pilha *pilha) {
+    if (filaVazia(fila) || pilhaVazia(pilha)) {
+        return 0;
+    }
+
+    int indiceFila = fila->inicio;
+    Peca temp = fila->itens[indiceFila];
+    fila->itens[indiceFila] = pilha->itens[pilha->topo];
+    pilha->itens[pilha->topo] = temp;
+    return 1;
+}
+
+// Troca os 3 primeiros elementos da fila com as 3 peças da pilha.
+// A pilha deve ter pelo menos 3 peças para que a operação ocorra.
+int trocarTresPrimeiros(Fila *fila, Pilha *pilha) {
+    if (fila->total < 3 || pilha->topo < 2) {
+        return 0;
+    }
+
+    for (int i = 0; i < 3; i++) {
+        int indiceFila = (fila->inicio + i) % FILA_CAPACIDADE;
+        int indicePilha = pilha->topo - i;
+        Peca temp = fila->itens[indiceFila];
+        fila->itens[indiceFila] = pilha->itens[indicePilha];
+        pilha->itens[indicePilha] = temp;
+    }
+    return 1;
+}
+
 char gerarTipoAleatorio(void) {
     const char tipos[4] = {'I', 'O', 'T', 'L'};
     return tipos[rand() % 4];
@@ -137,9 +168,11 @@ void mostrarEstado(const Fila *fila, const Pilha *pilha) {
 
 void exibirMenu(void) {
     printf("\nOpções de ação:\n");
-    printf("1 - Jogar peça\n");
-    printf("2 - Reservar peça\n");
-    printf("3 - Usar peça reservada\n");
+    printf("1 - Jogar peça da frente da fila\n");
+    printf("2 - Enviar peça da fila para a pilha de reserva\n");
+    printf("3 - Usar peça da pilha de reserva\n");
+    printf("4 - Trocar peça da frente da fila com o topo da pilha\n");
+    printf("5 - Trocar os 3 primeiros da fila com as 3 peças da pilha\n");
     printf("0 - Sair\n");
     printf("Escolha uma opção: ");
 }
@@ -195,6 +228,18 @@ int main(void) {
                 printf("Reserva vazia! Não há peça para usar.\n");
             } else {
                 printf("Peça usada da reserva: [%c %d]\n", pecaUsada.tipo, pecaUsada.id);
+            }
+        } else if (comando == 4) {
+            if (trocarFrenteFilaPilha(&fila, &reserva)) {
+                printf("Ação: troca realizada entre a frente da fila e o topo da pilha.\n");
+            } else {
+                printf("Troca inválida: verifique se há peça na fila e na pilha.\n");
+            }
+        } else if (comando == 5) {
+            if (trocarTresPrimeiros(&fila, &reserva)) {
+                printf("Ação: troca múltipla realizada entre os 3 primeiros da fila e as 3 da pilha.\n");
+            } else {
+                printf("Troca múltipla inválida: é necessário ter pelo menos 3 peças na pilha de reserva.\n");
             }
         } else if (comando == 0) {
             printf("Encerrando o jogo. Obrigado por jogar!\n");
